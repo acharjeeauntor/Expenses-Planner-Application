@@ -1,6 +1,9 @@
+import 'package:expensesplanning/widgets/new_transaction.dart';
+import 'package:expensesplanning/widgets/transaction_list.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'transaction.dart';
+
+import 'models/transaction.dart';
 
 void main() {
   runApp(MyApp());
@@ -12,14 +15,23 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.purple,
+        accentColor: Colors.amber,
+      ),
       title: 'Expenses Planner',
       home: HomePage(),
     );
   }
 }
 
-class HomePage extends StatelessWidget {
-  final List<Transaction> transactions = [
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final List<Transaction> _userTransactions = [
     Transaction(
       id: 't1',
       title: 'Title1',
@@ -34,14 +46,42 @@ class HomePage extends StatelessWidget {
     ),
   ];
 
+  void _addNewTransaction(String txTitle, double txAmount) {
+    final newTx = Transaction(
+        id: DateTime.now().toString(),
+        title: txTitle,
+        amount: txAmount,
+        date: DateTime.now());
+    setState(() {
+      _userTransactions.add(newTx);
+    });
+  }
+
+  void _startAddNewTransaction(BuildContext ctx) {
+    showModalBottomSheet(
+        context: ctx,
+        builder: (bCtx) {
+          return GestureDetector(
+            onTap: () {},
+            child: NewTransaction(_addNewTransaction),
+            behavior: HitTestBehavior.opaque,
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        actions: <Widget>[
+          IconButton(
+              icon: Icon(Icons.add),
+              onPressed: () => _startAddNewTransaction(context))
+        ],
         title: Text("Expenses Planner"),
       ),
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        //crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           Container(
@@ -52,33 +92,7 @@ class HomePage extends StatelessWidget {
               elevation: 5,
             ),
           ),
-          Column(
-            children: transactions.map((tx) {
-              return Card(
-                child: Row(
-                  children: <Widget>[
-                    Container(
-                      child: Text(tx.amount.toString()),
-                      margin:
-                          EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                      padding: EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                          border: Border.all(
-                        color: Colors.black,
-                        width: 2,
-                      )),
-                    ),
-                    Column(
-                      children: <Widget>[
-                        Text(tx.title.toString()),
-                        Text(tx.date.toString()),
-                      ],
-                    )
-                  ],
-                ),
-              );
-            }).toList(),
-          )
+          TransactionList(_userTransactions),
         ],
       ),
     );
